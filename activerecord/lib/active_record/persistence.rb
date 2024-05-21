@@ -335,6 +335,11 @@ module ActiveRecord
         end
     end
 
+    # Returns true if this object is being saved.
+    def saving?
+      @saving
+    end
+
     # Returns true if this object hasn't been saved yet -- that is, a record
     # for the object doesn't exist in the database yet; otherwise, returns false.
     def new_record?
@@ -390,9 +395,13 @@ module ActiveRecord
     # Attributes marked as readonly are silently ignored if the record is
     # being updated.
     def save(**options, &block)
+      @saving = true
+
       create_or_update(**options, &block)
     rescue ActiveRecord::RecordInvalid
       false
+    ensure
+      @saving = false
     end
 
     ##
@@ -423,7 +432,11 @@ module ActiveRecord
     #
     # Unless an error is raised, returns true.
     def save!(**options, &block)
+      @saving = true
+
       create_or_update(**options, &block) || raise(RecordNotSaved.new("Failed to save the record", self))
+    ensure
+      @saving = false
     end
 
     # Deletes the record in the database and freezes this instance to

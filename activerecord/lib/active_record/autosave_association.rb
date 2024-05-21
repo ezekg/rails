@@ -288,6 +288,8 @@ module ActiveRecord
           association && association.target
         elsif autosave
           association.target.find_all(&:changed_for_autosave?)
+        elsif autosave == false
+          nil
         else
           association.target.find_all(&:new_record?)
         end
@@ -331,11 +333,12 @@ module ActiveRecord
         end
       end
 
-      # Returns whether or not the association is valid and applies any errors to
-      # the parent, <tt>self</tt>, if it wasn't. Skips any <tt>:autosave</tt>
-      # enabled records if they're marked_for_destruction? or destroyed.
-      def association_valid?(association, record)
-        return true if record.destroyed? || (association.options[:autosave] && record.marked_for_destruction?)
+      # enabled records if they're marked_for_destruction? or destroyed. Also
+      # skips records that are already in the process of being saved to prevent
+      # cyclical validations runs resulting in false-positive failures.
+      def association_valid?(reflection, record, index = nil)
+        return true if record.destroyed? || (reflection.options[:autosave] && record.marked_for_destruction?)
+        return true if record.saving?
 
         context = validation_context if custom_validation_context?
 
@@ -350,6 +353,7 @@ module ActiveRecord
             errors.add(association.reflection.name)
           end
         end
+
         valid
       end
 
@@ -391,7 +395,7 @@ module ActiveRecord
             end
 
             records.each do |record|
-              next if record.destroyed?
+              next if record.destroyed? || record.saving?
 
               saved = true
 
