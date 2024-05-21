@@ -99,3 +99,19 @@ class CommentWithAfterCreateUpdate < Comment
     update(body: "bar")
   end
 end
+
+class CommentsByOriginalPoster < ActiveRecord::Base
+  self.automatically_invert_plural_associations = true
+  self.has_many_inversing = true
+  self.table_name = 'comments'
+
+  belongs_to :author, class_name: "OriginalPoster", foreign_key: :author_id, inverse_of: :comments
+  belongs_to :post, class_name: "PostsByOriginalPoster", foreign_key: :post_id, inverse_of: :comments
+
+  validates :author, presence: true
+  validates :post, presence: true
+
+  validate do
+    errors.add :author unless post.author_id == author_id
+  end
+end

@@ -153,8 +153,19 @@ module ActiveRecord::Associations::Builder # :nodoc:
       CODE
     end
 
+    def self.define_readers(mixin, name)
+      super
+
+      mixin.class_eval <<-CODE, __FILE__, __LINE__ + 1
+        def #{name}_id
+          read_attribute(:#{name}_id) || #{name}&.id
+        end
+      CODE
+    end
+
     private_class_method :macro, :valid_options, :valid_dependent_options, :define_callbacks,
       :define_validations, :define_change_tracking_methods, :add_counter_cache_callbacks,
-      :add_touch_callbacks, :add_default_callbacks, :add_destroy_callbacks
+      :add_touch_callbacks, :add_default_callbacks, :add_destroy_callbacks,
+      :define_readers
   end
 end

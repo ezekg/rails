@@ -421,3 +421,14 @@ class PostRecord < ActiveRecord::Base
     end
   end
 end
+
+class PostsByOriginalPoster < ActiveRecord::Base
+  self.automatically_invert_plural_associations = true
+  self.has_many_inversing = true
+  self.table_name = 'posts'
+
+  belongs_to :author, class_name: "OriginalPoster", foreign_key: :author_id, inverse_of: :posts
+  has_many :comments, class_name: "CommentsByOriginalPoster", foreign_key: :post_id, inverse_of: :post
+
+  validates :author, presence: true
+end

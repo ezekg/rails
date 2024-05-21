@@ -318,3 +318,12 @@ class AuthorFavoriteWithScope < ActiveRecord::Base
   belongs_to :author
   belongs_to :favorite_author, class_name: "Author"
 end
+
+class OriginalPoster < ActiveRecord::Base
+  self.automatically_invert_plural_associations = true
+  self.has_many_inversing = true
+  self.table_name = 'authors'
+
+  has_many :posts, class_name: "PostsByOriginalPoster", foreign_key: :author_id, inverse_of: :author
+  has_many :comments, class_name: "CommentsByOriginalPoster", foreign_key: :author_id, inverse_of: :author
+end

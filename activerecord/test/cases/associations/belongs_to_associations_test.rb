@@ -1824,6 +1824,21 @@ class BelongsToAssociationsTest < ActiveRecord::TestCase
 
     assert_equal(other_order.id, book.order_id)
   end
+
+  test "association_id foreign key always matches association.id" do
+    author = OriginalPoster.new(name: "The OP")
+    post = PostsByOriginalPoster.new(title: "A post by the OP", body: "This is the post body", author:)
+    comment = CommentsByOriginalPoster.new(body: "A comment by the OP", author:, post:)
+
+    assert author.save
+    assert post.persisted?
+    assert comment.persisted?
+
+    assert_equal author, post.author
+    assert_equal post.author, comment.author
+    assert_equal author.id, post.author_id
+    assert_equal post.author_id, comment.author_id
+  end
 end
 
 class BelongsToWithForeignKeyTest < ActiveRecord::TestCase
